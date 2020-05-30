@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/Thor40/Noter#readme",
   "dependencies": {
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "uuid": "^8.1.0"
   }
 }

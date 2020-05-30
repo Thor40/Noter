@@ -1,39 +1,32 @@
 const express = require('express');
 const app = express();
 const { notes } = require('./Develop/db/db')
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 const fs = require('fs');
 const path = require('path');
-
-function findById(id, notesArray) {
-    const result = notesArray.filter(note => note.id === id)[0];
-    return result;
-};
-
-function createNewNote(body, notesArray) {
-    const note = body;
-    notesArray.push(note);
-    fs.writeFileSync(
-        path.join(__dirname, './Develop/db/db.json'),
-        JSON.stringify({ notes: notesArray }, null, 2)
-    );
-
-    return note;
-}
+const { v4: uuidv4 } = require('uuid');
 
 app.get('/api/notes', (req, res) => {
-    let results = notes;
-    console.log(req.query)
-    res.json(results);
+    fs.readFile('./Develop/db/db.json', 'utf8', (err, data) => {
+        res.json(JSON.parse(data));
+    });
 });
 
-app.get('/api/notes/:id', (req,res) => {
-    const result = findById(req.params.id, notes);
-    if (result) {
-        res.json(result);
-      } else {
-        res.send(404);
-      }
+app.delete('/api/notes/:id', (req,res) => {
+    fs.readFile('./Develop/db/db.json', 'utf8', (err, data) => {
+        console.log(data);
+        let dataArray = JSON.parse(data);
+
+        let dataFilter = dataArray.filter(note => note.id !== req.params.id);
+        fs.writeFile('./Develop/db/db.json', JSON.stringify(dataFilter), (err) => {
+            if(err) {
+                console.log(err);
+            } else {
+                console.log(`Note has been removed!`)
+            }
+            res.end();
+        })
+    });
 });
 
 // middleware
@@ -44,18 +37,28 @@ app.use(express.static('Develop/public'));
 
 app.post('/api/notes', (req, res) => {
     // set id based on what the next index of array
-    req.body.id = notes.length.toString();
-    // add note to json file and note array
-    const note = createNewNote(req.body, notes);
+    req.body.id = uuidv4();
+    fs.readFile('./Develop/db/db.json', 'utf8', (err, data) => {
+        console.log(data);
+        let dataArray = JSON.parse(data);
+        dataArray.push(req.body);
+        fs.writeFile('./Develop/db/db.json', JSON.stringify(dataArray), (err) => {
+            if(err) {
+                console.log(err);
+            } else {
+                console.log(`Note has been added!`)
+            }
+        })
+    })
     res.json(req.body);
-});
-
-app.get('/', (req,res) => {
-    res.sendFile(path.join(__dirname, './Develop/public/index.html'));
 });
 
 app.get('/notes', (req,res) => {
     res.sendFile(path.join(__dirname, './Develop/public/notes.html'));
+});
+
+app.get('*', (req,res) => {
+    res.sendFile(path.join(__dirname, './Develop/public/index.html'));
 });
 
 app.listen(PORT, () => {
