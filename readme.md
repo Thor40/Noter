@@ -7,6 +7,7 @@ Note taking applicaiton
 * [Technologies](#technologies)
 * [Setup](#setup)
 * [Testing](#testing)
+* [Features](#features)
 
 ## General info
 --------------------
